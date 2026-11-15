@@ -1,45 +1,42 @@
 package ua.beauty.model;
 
 import ua.beauty.util.BeautyUtils;
-import ua.common.BaseEntity;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 /**
- * Entity representing a service provided by the Beauty Salon.
- * Key field: {@code serviceCode} (🔑).
- * Creation is performed via static factory {@link #of(String, String, String, int, double)}.
- * Has a mutable field: {@code price} (✎).
+ * Mutable entity representing a service provided by the Beauty Salon.
+ * Remains a class because {@code price} is mutable (✎).
  */
-public final class BeautyService extends BaseEntity {
+public final class BeautyService {
 
     private final String serviceCode;
     private final String name;
-    private final String category;
+    private final ServiceCategory category;
     private final int durationMinutes;
+    private final LocalDateTime createdAt;
     private double price;
 
-    private BeautyService(String serviceCode, String name, String category, int durationMinutes, double price) {
-        super();
+    public BeautyService(String serviceCode, String name, ServiceCategory category, int durationMinutes, double price) {
         String normalizedCode = BeautyUtils.normalize(serviceCode);
         String normalizedName = BeautyUtils.normalize(name);
-        String normalizedCat = BeautyUtils.normalizeUpper(category);
 
         BeautyUtils.validateServiceCode(normalizedCode);
         BeautyUtils.validateName(normalizedName, "Service");
-        BeautyUtils.validateCategory(normalizedCat);
+        BeautyUtils.requireNotNull(category, "Service category");
         BeautyUtils.validateDurationMinutes(durationMinutes);
 
         this.serviceCode = normalizedCode;
         this.name = normalizedName;
-        this.category = normalizedCat;
+        this.category = category;
         this.durationMinutes = durationMinutes;
+        this.createdAt = LocalDateTime.now();
 
-        // Setter is called to avoid duplicate validation logic
         setPrice(price);
     }
 
-    public static BeautyService of(String serviceCode, String name, String category, int durationMinutes, double price) {
+    public static BeautyService of(String serviceCode, String name, ServiceCategory category, int durationMinutes, double price) {
         return new BeautyService(serviceCode, name, category, durationMinutes, price);
     }
 
@@ -51,7 +48,7 @@ public final class BeautyService extends BaseEntity {
         return name;
     }
 
-    public String getCategory() {
+    public ServiceCategory getCategory() {
         return category;
     }
 
@@ -63,9 +60,12 @@ public final class BeautyService extends BaseEntity {
         return price;
     }
 
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
     /**
      * Sets a new price for the service.
-     * The setter is marked final because it is invoked from the constructor.
      *
      * @param price new price, strictly greater than 0
      */
@@ -96,7 +96,7 @@ public final class BeautyService extends BaseEntity {
         return "BeautyService{" +
                 "serviceCode='" + serviceCode + '\'' +
                 ", name='" + name + '\'' +
-                ", category='" + category + '\'' +
+                ", category=" + category +
                 ", durationMinutes=" + durationMinutes +
                 ", price=" + price +
                 ", createdAt=" + createdAt +

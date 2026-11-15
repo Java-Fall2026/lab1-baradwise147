@@ -1,71 +1,35 @@
 package ua.beauty.model;
 
 import ua.beauty.util.BeautyUtils;
-import ua.common.BaseEntity;
 
-import java.util.Objects;
+import java.time.LocalDateTime;
 
 /**
- * Entity representing a specialist/master working at the Beauty Salon.
- * Key field: {@code employeeId} (🔑).
+ * Immutable entity representing a specialist/master working at the Beauty Salon.
+ * Implemented as a record (all boilerplate getters, equals, hashCode, and toString are compiler-generated).
+ * Validation and normalization are executed inside the compact constructor.
  */
-public final class Master extends BaseEntity {
+public record Master(
+        String employeeId,
+        String fullName,
+        ServiceCategory category,
+        LocalDateTime createdAt
+) {
 
-    private final String employeeId;
-    private final String fullName;
-    private final String category;
-
-    public Master(String employeeId, String fullName, String category) {
-        super();
-        String normalizedId = BeautyUtils.normalize(employeeId);
-        String normalizedName = BeautyUtils.normalize(fullName);
-        String normalizedCat = BeautyUtils.normalizeUpper(category);
-
-        BeautyUtils.validateEmployeeId(normalizedId);
-        BeautyUtils.validateName(normalizedName, "Master");
-        BeautyUtils.validateCategory(normalizedCat);
-
-        this.employeeId = normalizedId;
-        this.fullName = normalizedName;
-        this.category = normalizedCat;
+    public Master(String employeeId, String fullName, ServiceCategory category) {
+        this(employeeId, fullName, category, LocalDateTime.now());
     }
 
-    public String getEmployeeId() {
-        return employeeId;
-    }
+    public Master {
+        employeeId = BeautyUtils.normalize(employeeId);
+        fullName = BeautyUtils.normalize(fullName);
 
-    public String getFullName() {
-        return fullName;
-    }
+        BeautyUtils.validateEmployeeId(employeeId);
+        BeautyUtils.validateName(fullName, "Master");
+        BeautyUtils.requireNotNull(category, "Master category");
 
-    public String getCategory() {
-        return category;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
         }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        Master master = (Master) o;
-        return Objects.equals(employeeId, master.employeeId);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(employeeId);
-    }
-
-    @Override
-    public String toString() {
-        return "Master{" +
-                "employeeId='" + employeeId + '\'' +
-                ", fullName='" + fullName + '\'' +
-                ", category='" + category + '\'' +
-                ", createdAt=" + createdAt +
-                '}';
     }
 }
