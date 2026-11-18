@@ -1,9 +1,9 @@
 package ua.beauty.util;
 
+import ua.beauty.model.ServiceCategory;
+
 import java.time.LocalDate;
 import java.time.Period;
-import java.util.Collection;
-import java.util.Objects;
 
 /**
  * Package-private helper providing low-level validation routines.
@@ -55,16 +55,10 @@ final class ValidationHelper {
         }
     }
 
-    static void requireAllowedValue(String value, Collection<String> allowedValues, String fieldName) {
-        requireNotNull(value, fieldName);
-        if (!allowedValues.contains(value)) {
-            throw new IllegalArgumentException(
-                    fieldName + " must be one of " + allowedValues + ", got: '" + value + "'");
-        }
-    }
-
-    static void requireMatchingCategories(String masterCategory, String serviceCategory) {
-        if (!Objects.equals(masterCategory, serviceCategory)) {
+    static void requireMatchingCategories(ServiceCategory masterCategory, ServiceCategory serviceCategory) {
+        requireNotNull(masterCategory, "Master category");
+        requireNotNull(serviceCategory, "Service category");
+        if (masterCategory != serviceCategory) {
             throw new IllegalArgumentException(
                     "Master category must match service category. Master has '" + masterCategory
                             + "', but service requires '" + serviceCategory + "'");

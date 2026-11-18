@@ -1,76 +1,36 @@
 package ua.beauty.model;
 
 import ua.beauty.util.BeautyUtils;
-import ua.common.BaseEntity;
 
 import java.time.LocalDate;
-import java.util.Objects;
+import java.time.LocalDateTime;
 
 /**
- * Entity representing a client in the Beauty Salon.
- * Key field: {@code phone} (🔑).
- * Creation is performed via static factory {@link #of(String, String, LocalDate)}.
+ * Immutable entity representing a client in the Beauty Salon.
+ * Implemented as a record (all boilerplate getters, equals, hashCode, and toString are compiler-generated).
+ * Validation and normalization are executed inside the compact constructor.
  */
-public final class BeautyClient extends BaseEntity {
+public record BeautyClient(
+        String phone,
+        String name,
+        LocalDate birthDate,
+        LocalDateTime createdAt
+) {
 
-    private final String phone;
-    private final String name;
-    private final LocalDate birthDate;
+    public BeautyClient(String phone, String name, LocalDate birthDate) {
+        this(phone, name, birthDate, LocalDateTime.now());
+    }
 
-    private BeautyClient(String phone, String name, LocalDate birthDate) {
-        super();
-        String normalizedPhone = BeautyUtils.normalize(phone);
-        String normalizedName = BeautyUtils.normalize(name);
+    public BeautyClient {
+        phone = BeautyUtils.normalize(phone);
+        name = BeautyUtils.normalize(name);
 
-        BeautyUtils.validatePhone(normalizedPhone);
-        BeautyUtils.validateName(normalizedName, "Client");
+        BeautyUtils.validatePhone(phone);
+        BeautyUtils.validateName(name, "Client");
         BeautyUtils.validateBirthDate(birthDate);
 
-        this.phone = normalizedPhone;
-        this.name = normalizedName;
-        this.birthDate = birthDate;
-    }
-
-    public static BeautyClient of(String phone, String name, LocalDate birthDate) {
-        return new BeautyClient(phone, name, birthDate);
-    }
-
-    public String getPhone() {
-        return phone;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public LocalDate getBirthDate() {
-        return birthDate;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
         }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        BeautyClient that = (BeautyClient) o;
-        return Objects.equals(phone, that.phone);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(phone);
-    }
-
-    @Override
-    public String toString() {
-        return "BeautyClient{" +
-                "phone='" + phone + '\'' +
-                ", name='" + name + '\'' +
-                ", birthDate=" + birthDate +
-                ", createdAt=" + createdAt +
-                '}';
     }
 }

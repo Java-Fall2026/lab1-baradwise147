@@ -1,40 +1,20 @@
 package ua.beauty.util;
 
+import ua.beauty.model.AppointmentState;
 import ua.beauty.model.BeautyClient;
 import ua.beauty.model.BeautyService;
 import ua.beauty.model.ClientAppointment;
 import ua.beauty.model.Master;
+import ua.beauty.model.ServiceCategory;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
 /**
  * Public facade utility class for the Beauty Salon domain.
- * Exposes domain validation, normalization, and computed calculations to other packages.
+ * Exposes validation routines, formatting, computed domain methods, and switch expressions.
  */
 public final class BeautyUtils {
-
-    public static final Set<String> ALLOWED_CATEGORIES;
-    public static final Set<String> ALLOWED_STATES;
-
-    static {
-        Set<String> categories = new LinkedHashSet<>();
-        categories.add("HAIRCUT");
-        categories.add("MANICURE");
-        categories.add("MASSAGE");
-        categories.add("FACIAL");
-        ALLOWED_CATEGORIES = Collections.unmodifiableSet(categories);
-
-        Set<String> states = new LinkedHashSet<>();
-        states.add("CONFIRMED");
-        states.add("COMPLETED");
-        states.add("CANCELLED");
-        states.add("NO_SHOW");
-        ALLOWED_STATES = Collections.unmodifiableSet(states);
-    }
 
     private BeautyUtils() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
@@ -44,12 +24,12 @@ public final class BeautyUtils {
         return FormatHelper.normalize(str);
     }
 
-    public static String normalizeUpper(String str) {
-        return FormatHelper.normalizeUpper(str);
-    }
-
     public static String formatMoney(double amount) {
         return FormatHelper.formatMoney(amount);
+    }
+
+    public static void requireNotNull(Object value, String fieldName) {
+        ValidationHelper.requireNotNull(value, fieldName);
     }
 
     public static void validatePhone(String phone) {
@@ -68,11 +48,6 @@ public final class BeautyUtils {
         ValidationHelper.requireNotBlank(employeeId, "Master employeeId");
     }
 
-    public static void validateCategory(String category) {
-        ValidationHelper.requireNotBlank(category, "Category");
-        ValidationHelper.requireAllowedValue(category, ALLOWED_CATEGORIES, "Category");
-    }
-
     public static void validateServiceCode(String serviceCode) {
         ValidationHelper.requireNotBlank(serviceCode, "Service code");
     }
@@ -85,19 +60,15 @@ public final class BeautyUtils {
         ValidationHelper.requirePositive(price, "Service price");
     }
 
-    public static void validateAppointmentState(String state) {
-        ValidationHelper.requireNotBlank(state, "Appointment state");
-        ValidationHelper.requireAllowedValue(state, ALLOWED_STATES, "Appointment state");
-    }
-
     public static void validateAppointment(BeautyClient client, Master master, BeautyService service,
-                                          LocalDate appointmentDate, LocalTime startTime) {
+                                          LocalDate appointmentDate, LocalTime startTime, AppointmentState state) {
         ValidationHelper.requireNotNull(client, "Appointment client");
         ValidationHelper.requireNotNull(master, "Appointment master");
         ValidationHelper.requireNotNull(service, "Appointment service");
         ValidationHelper.requireNotNull(appointmentDate, "Appointment date");
         ValidationHelper.requireNotNull(startTime, "Appointment start time");
-        ValidationHelper.requireMatchingCategories(master.getCategory(), service.getCategory());
+        ValidationHelper.requireNotNull(state, "Appointment state");
+        ValidationHelper.requireMatchingCategories(master.category(), service.getCategory());
     }
 
     // --- Computed methods from domain profile ---
@@ -106,9 +77,6 @@ public final class BeautyUtils {
      * Calculates the estimated end time of an appointment.
      * Formula: startTime + service.durationMinutes.
      * Not stored in a field.
-     *
-     * @param appointment domain appointment entity
-     * @return end time of the appointment
      */
     public static LocalTime endTime(ClientAppointment appointment) {
         ValidationHelper.requireNotNull(appointment, "Appointment");
@@ -119,12 +87,39 @@ public final class BeautyUtils {
      * Calculates the price per minute for a beauty service.
      * Formula: price / durationMinutes.
      * Not stored in a field.
-     *
-     * @param service domain service entity
-     * @return price per minute in UAH
      */
     public static double pricePerMinute(BeautyService service) {
         ValidationHelper.requireNotNull(service, "Service");
         return service.getPrice() / service.getDurationMinutes();
+    }
+
+    // --- Switch Expressions (Java 14+) ---
+
+    /**
+     * Switch-expression #1: Exhaustive check on ServiceCategory enum WITHOUT default.
+     * Maps each category to a detailed domain description.
+     */
+    public static String getCategoryDescription(ServiceCategory category) {
+        ValidationHelper.requireNotNull(category, "Category");
+        return switch (category) {
+            case HAIRCUT -> "Hair styling, cutting and precision grooming services";
+            case MANICURE -> "Nail aesthetic care, polish styling and hand therapy";
+            case MASSAGE -> "Therapeutic relaxation and deep muscle recovery";
+            case FACIAL -> "Cosmetic facial cleansing, hydration and skincare therapy";
+        };
+    }
+
+    /**
+     * Switch-expression #2: Domain behavior dispatch based on appointment state.
+     * Determines the operational salon workflow action for the current state.
+     */
+    public static String getNextAction(AppointmentState state) {
+        ValidationHelper.requireNotNull(state, "Appointment state");
+        return switch (state) {
+            case CONFIRMED -> "Send automated SMS reminder and prepare master workstation";
+            case COMPLETED -> "Issue official receipt, credit loyalty points, and request service review";
+            case CANCELLED -> "Release booked time slot immediately and update master schedule";
+            case NO_SHOW -> "Record missed visit penalty in client account profile";
+        };
     }
 }

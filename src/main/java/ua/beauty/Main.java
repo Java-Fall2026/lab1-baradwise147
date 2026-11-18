@@ -1,141 +1,122 @@
 package ua.beauty;
 
+import ua.beauty.model.AppointmentState;
 import ua.beauty.model.BeautyClient;
 import ua.beauty.model.BeautyService;
 import ua.beauty.model.ClientAppointment;
 import ua.beauty.model.Master;
+import ua.beauty.model.ServiceCategory;
 import ua.beauty.util.BeautyUtils;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 /**
- * Main demonstration class for Beauty Salon & Spa domain.
+ * Main demonstration class for Lab 2 (Enum, Record, and Switch expressions).
  */
 public class Main {
 
     public static void main(String[] args) {
-        System.setOut(new java.io.PrintStream(System.out, true, java.nio.charset.StandardCharsets.UTF_8));
+        System.setOut(new java.io.PrintStream(System.out, true, StandardCharsets.UTF_8));
 
         System.out.println("======================================================================");
-        System.out.println("   ЛАБОРАТОРНА РОБОТА №1 — ВАРІАНТ 11: САЛОН КРАСИ ТА СПА");
+        System.out.println("   ЛАБОРАТОРНА РОБОТА №2: ENUM, RECORD ТА SWITCH-ВИРАЗИ");
+        System.out.println("   Варіант 11: Салон краси та СПА");
         System.out.println("======================================================================\n");
 
-        // 1. Створення обʼєкта конструктором і створення фабричним методом
-        System.out.println("--- 1. Створення об'єктів (публічний конструктор vs статична фабрика) ---");
-        Master master1 = new Master("EMP-001", "  Ірина Шевченко  ", "haircut");
-        System.out.println("Створено майстра через public конструктор: " + master1.getFullName()
-                + " [категорія: " + master1.getCategory() + "]");
+        // 1. Створення record-обʼєкта і звернення до його компонентів
+        System.out.println("--- 1. Створення record-об'єктів та звернення до їхніх компонентів ---");
+        BeautyClient client = new BeautyClient("  +380501234567  ", "  Анна Коваль  ", LocalDate.of(2001, 7, 20));
+        System.out.println("Створено record BeautyClient:");
+        System.out.println("  client.phone()     = " + client.phone());
+        System.out.println("  client.name()      = " + client.name());
+        System.out.println("  client.birthDate() = " + client.birthDate());
+        System.out.println("  client.createdAt() = " + client.createdAt());
 
-        BeautyClient client1 = BeautyClient.of("  +380501234567  ", "  Анна Коваль  ", LocalDate.of(2000, 5, 15));
-        System.out.println("Створено клієнта через фабричний метод of(...): " + client1.getName()
-                + " [тел: " + client1.getPhone() + "]");
+        Master master = new Master("EMP-001", "Ірина Шевченко", ServiceCategory.HAIRCUT);
+        System.out.println("\nСтворено record Master:");
+        System.out.println("  master.employeeId() = " + master.employeeId());
+        System.out.println("  master.fullName()   = " + master.fullName());
+        System.out.println("  master.category()   = " + master.category());
+        System.out.println("  master.createdAt()  = " + master.createdAt() + "\n");
 
-        BeautyService serviceHaircut = BeautyService.of("SRV-H01", "  Модельна стрижка  ", "  haircut  ", 60, 650.0);
-        System.out.println("Створено послугу через фабричний метод of(...): " + serviceHaircut.getName()
-                + " [ціна: " + BeautyUtils.formatMoney(serviceHaircut.getPrice()) + "]");
-
-        ClientAppointment appointment1 = new ClientAppointment(
-                client1, master1, serviceHaircut, LocalDate.now().plusDays(1), LocalTime.of(10, 0), "confirmed"
-        );
-        System.out.println("Створено запис через public конструктор на "
-                + appointment1.getAppointmentDate() + " о " + appointment1.getStartTime()
-                + " [статус: " + appointment1.getState() + "]\n");
-
-        // 2. Демонстрація нормалізації
-        System.out.println("--- 2. Нормалізація вхідних даних (trim та переведення у потрібний регістр) ---");
-        System.out.println("Вхідний телефон майстра/клієнта: '  +380501234567  ' -> '" + client1.getPhone() + "'");
-        System.out.println("Вхідна категорія: '  haircut  ' -> '" + master1.getCategory() + "'");
-        System.out.println("Вхідний стан запису: 'confirmed' -> '" + appointment1.getState() + "'\n");
-
-        // 3. Три різні порушення правил валідації у try/catch
-        System.out.println("--- 3. Обробка помилок валідації (три різні бізнес-правила) ---");
-
-        // Порушення 1: Вік клієнта менше 14 років
-        try {
-            System.out.print("Тест 3.1 (вік клієнта < 14 років): ");
-            BeautyClient.of("+380990001122", "Малюк", LocalDate.now().minusYears(10));
-        } catch (IllegalArgumentException e) {
-            System.out.println("Спіймано виняток: " + e.getMessage());
+        // 2. Enum у роботі: перебір values(), доступ до власного поля, valueOf у try/catch
+        System.out.println("--- 2. Enum у роботі (values(), власні поля, обробка помилок valueOf) ---");
+        System.out.println("Перелік усіх категорій послуг через ServiceCategory.values():");
+        for (ServiceCategory cat : ServiceCategory.values()) {
+            System.out.printf("  Категорія: %-10s | Ціновий коефіцієнт (priceFactor): %.1fx%n",
+                    cat.name(), cat.getPriceFactor());
         }
 
-        // Порушення 2: Неприпустима ціна послуги (ціна <= 0)
+        System.out.println("\nПрямий доступ до поля константи:");
+        System.out.println("  ServiceCategory.MASSAGE.getPriceFactor() = " + ServiceCategory.MASSAGE.getPriceFactor());
+
+        System.out.println("\nСпроба викликати ServiceCategory.valueOf із некоректним рядком:");
         try {
-            System.out.print("Тест 3.2 (ціна послуги <= 0): ");
-            BeautyService.of("SRV-BAD", "Безкоштовна стрижка", "HAIRCUT", 45, -50.0);
+            ServiceCategory invalid = ServiceCategory.valueOf("SOLARIUM");
+            System.out.println("Знайдено: " + invalid);
         } catch (IllegalArgumentException e) {
-            System.out.println("Спіймано виняток: " + e.getMessage());
+            System.out.println("  Спіймано виняток для 'SOLARIUM': " + e.getMessage() + "\n");
         }
 
-        // Порушення 3: Невідповідність категорії майстра та послуги
-        try {
-            System.out.print("Тест 3.3 (невідповідність категорій майстра і послуги): ");
-            Master massageMaster = new Master("EMP-002", "Олег Масажист", "MASSAGE");
-            new ClientAppointment(
-                    client1, massageMaster, serviceHaircut, LocalDate.now().plusDays(2), LocalTime.of(12, 0), "CONFIRMED"
-            );
-        } catch (IllegalArgumentException e) {
-            System.out.println("Спіймано виняток: " + e.getMessage());
+        // 3. Обидва switch-вирази
+        System.out.println("--- 3. Демонстрація двох switch-виразів (Java 14+) ---");
+        System.out.println("Switch-вираз #1 (вичерпний по enum ServiceCategory без default):");
+        for (ServiceCategory cat : ServiceCategory.values()) {
+            System.out.println("  " + cat + " -> " + BeautyUtils.getCategoryDescription(cat));
         }
-        System.out.println();
 
-        // 4. Спроба зіпсувати валідний обʼєкт сеттером
-        System.out.println("--- 4. Спроба зіпсувати валідний об'єкт через сеттер ---");
-        System.out.println("Поточна ціна послуги: " + BeautyUtils.formatMoney(serviceHaircut.getPrice()));
-        try {
-            System.out.print("Спроба встановити ціну 0.0 грн: ");
-            serviceHaircut.setPrice(0.0);
-        } catch (IllegalArgumentException e) {
-            System.out.println("Спіймано виняток: " + e.getMessage());
-        }
-        System.out.println("Ціна після невдалої спроби залишилась: "
-                + BeautyUtils.formatMoney(serviceHaircut.getPrice()) + "\n");
-
-        // 5. Порівняння обʼєктів: ==, equals, hashCode (однакові бізнес-ключі та різні)
-        System.out.println("--- 5. Порівняння об'єктів: ==, equals та hashCode ---");
-        BeautyClient client1DuplicateKey = BeautyClient.of(
-                client1.getPhone(), "Анна Інше Прізвище", LocalDate.of(1995, 1, 1)
-        );
-        BeautyClient differentClient = BeautyClient.of(
-                "+380999999999", "Богдан", LocalDate.of(1990, 8, 20)
+        BeautyService service = new BeautyService("SRV-H01", "Модельна стрижка", ServiceCategory.HAIRCUT, 60, 650.0);
+        ClientAppointment appointment = new ClientAppointment(
+                client, master, service, LocalDate.now().plusDays(1), LocalTime.of(11, 0), AppointmentState.CONFIRMED
         );
 
-        System.out.println("Два об'єкти з однаковим ключовим полем phone (" + client1.getPhone() + "):");
-        System.out.println("  client1 == client1DuplicateKey : " + (client1 == client1DuplicateKey) + " (різні посилання в пам'яті)");
-        System.out.println("  client1.equals(client1DuplicateKey) : " + client1.equals(client1DuplicateKey) + " (однаковий бізнес-ключ)");
-        System.out.println("  client1.hashCode() == client1DuplicateKey.hashCode() : "
-                + (client1.hashCode() == client1DuplicateKey.hashCode()));
+        System.out.println("\nSwitch-вираз #2 (вибір дії за статусом запису):");
+        for (AppointmentState state : AppointmentState.values()) {
+            System.out.println("  Статус " + state + " -> " + BeautyUtils.getNextAction(state));
+        }
+        System.out.println("Поточна дія для запису клієнта: " + BeautyUtils.getNextAction(appointment.getState()) + "\n");
 
-        System.out.println("Порівняння з іншим клієнтом (phone=" + differentClient.getPhone() + "):");
-        System.out.println("  client1.equals(differentClient) : " + client1.equals(differentClient) + "\n");
+        // 4. Record з невалідними даними -> IllegalArgumentException із компактного конструктора
+        System.out.println("--- 4. Валідація даних у компактному конструкторі record ---");
+        try {
+            System.out.print("Спроба створити BeautyClient з віком менше 14 років: ");
+            new BeautyClient("+380990001122", "Малюк", LocalDate.now().minusYears(10));
+        } catch (IllegalArgumentException e) {
+            System.out.println("Спіймано виняток: " + e.getMessage());
+        }
 
-        // 6. Виклик обчислюваних методів
-        System.out.println("--- 6. Обчислювані методи (не зберігаються в полях) ---");
-        LocalTime appointmentEndTime = BeautyUtils.endTime(appointment1);
-        System.out.println("Запис розпочинається о " + appointment1.getStartTime()
-                + ", тривалість послуги: " + serviceHaircut.getDurationMinutes() + " хв.");
-        System.out.println("Обчислений час завершення (endTime): " + appointmentEndTime);
+        try {
+            System.out.print("Спроба створити Master із порожнім employeeId: ");
+            new Master("   ", "Олексій", ServiceCategory.MANICURE);
+        } catch (IllegalArgumentException e) {
+            System.out.println("Спіймано виняток: " + e.getMessage() + "\n");
+        }
 
-        double ratePerMin = BeautyUtils.pricePerMinute(serviceHaircut);
-        System.out.println("Вартість послуги: " + BeautyUtils.formatMoney(serviceHaircut.getPrice())
-                + ", тривалість: " + serviceHaircut.getDurationMinutes() + " хв.");
-        System.out.printf("Обчислена вартість за хвилину (pricePerMinute): %.2f грн/хв%n%n", ratePerMin);
+        // 5. Два однакові record-обʼєкти: equals і hashCode без жодного рядка нашого коду
+        System.out.println("--- 5. Автоматичні equals та hashCode для record ---");
+        LocalDateTime fixedTime = LocalDateTime.of(2026, 11, 15, 12, 0);
+        BeautyClient clientA = new BeautyClient("+380509998877", "Олена", LocalDate.of(1998, 3, 10), fixedTime);
+        BeautyClient clientB = new BeautyClient("+380509998877", "Олена", LocalDate.of(1998, 3, 10), fixedTime);
+        BeautyClient clientC = new BeautyClient("+380500000000", "Олена", LocalDate.of(1998, 3, 10), fixedTime);
 
-        // 7. Вивід усіх сутностей через toString()
-        System.out.println("--- 7. Вивід усіх сутностей варіанта через toString() ---");
-        System.out.println("1) " + client1);
-        System.out.println("2) " + master1);
-        System.out.println("3) " + serviceHaircut);
-        System.out.println("4) " + appointment1);
-        System.out.println();
+        System.out.println("Порівняння clientA та clientB з ідентичними полями:");
+        System.out.println("  clientA == clientB               : " + (clientA == clientB) + " (різні екземпляри в пам'яті)");
+        System.out.println("  clientA.equals(clientB)          : " + clientA.equals(clientB) + " (автоматично згенерований equals)");
+        System.out.println("  clientA.hashCode() == clientB.hashCode() : "
+                + (clientA.hashCode() == clientB.hashCode()) + " (автоматично згенерований hashCode)");
+        System.out.println("Порівняння з іншим clientC:");
+        System.out.println("  clientA.equals(clientC)          : " + clientA.equals(clientC) + "\n");
 
-        // 8. Закоментовані рядки, які не компілюються через модифікатори доступу:
-        // Рядок нижче не скомпілюється, оскільки клас ValidationHelper має package-private доступ
-        // і не доступний ззовні пакета ua.beauty.util:
-        // ua.beauty.util.ValidationHelper.requireNotBlank("test", "testField");
-
-        // Рядок нижче не скомпілюється, оскільки конструктор BeautyClient позначено private (створення тільки через of(...)):
-        // BeautyClient directInst = new BeautyClient("+380501234567", "Анна", LocalDate.of(2000, 1, 1));
+        // 6. Вивід record через згенерований toString()
+        System.out.println("--- 6. Автоматичний toString() для record ---");
+        System.out.println("client: " + client);
+        System.out.println("master: " + master);
+        System.out.println("\nСутності, що залишилися звичайними класами (через наявність мутабельних полів ✎):");
+        System.out.println("service (мутабельне price): " + service);
+        System.out.println("appointment (мутабельне state): " + appointment);
 
     }
 }
