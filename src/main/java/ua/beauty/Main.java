@@ -1,119 +1,80 @@
 package ua.beauty;
 
-import ua.beauty.model.AppointmentState;
-import ua.beauty.model.BeautyClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import ua.beauty.io.ServiceLoader;
 import ua.beauty.model.BeautyService;
-import ua.beauty.model.ClientAppointment;
-import ua.beauty.model.Master;
-import ua.beauty.model.ServiceCategory;
 import ua.beauty.util.BeautyUtils;
 
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.nio.file.Path;
+import java.util.List;
 
 /**
- * Main demonstration class for Lab 2 (Enum, Record, and Switch expressions).
+ * Main demonstration class for Lab 3 (Files, Logging, and Exception Handling).
  */
 public class Main {
+
+    private static final Logger log = LoggerFactory.getLogger(Main.class);
 
     public static void main(String[] args) {
         System.setOut(new java.io.PrintStream(System.out, true, StandardCharsets.UTF_8));
 
         System.out.println("======================================================================");
-        System.out.println("   ЛАБОРАТОРНА РОБОТА №2: ENUM, RECORD ТА SWITCH-ВИРАЗИ");
+        System.out.println("   ЛАБОРАТОРНА РОБОТА №3: ФАЙЛИ, ЛОГУВАННЯ ТА ОБРОБКА ВИКЛЮЧЕНЬ");
         System.out.println("   Варіант 11: Салон краси та СПА");
         System.out.println("======================================================================\n");
 
-        // 1. Створення record-обʼєкта і звернення до його компонентів
-        System.out.println("--- 1. Створення record-об'єктів та звернення до їхніх компонентів ---");
-        BeautyClient client = new BeautyClient("  +380501234567  ", "  Анна Коваль  ", LocalDate.of(2001, 7, 20));
-        System.out.println("Створено record BeautyClient:");
-        System.out.println("  client.phone()     = " + client.phone());
-        System.out.println("  client.name()      = " + client.name());
-        System.out.println("  client.birthDate() = " + client.birthDate());
+        ServiceLoader loader = new ServiceLoader();
 
-        Master master = new Master("EMP-001", "Ірина Шевченко", ServiceCategory.HAIRCUT);
-        System.out.println("\nСтворено record Master:");
-        System.out.println("  master.employeeId() = " + master.employeeId());
-        System.out.println("  master.fullName()   = " + master.fullName());
-        System.out.println("  master.category()   = " + master.category() + "\n");
+        // 1. Читання CSV-файла з коректними й некоректними рядками
+        System.out.println("--- 1. Завантаження послуг із CSV-файлу (обробка некоректних рядків) ---");
+        Path csvPath = Path.of("data", "services.csv");
+        System.out.println("Читання файлу: " + csvPath.toAbsolutePath() + "\n");
 
-        // 2. Enum у роботі: перебір values(), доступ до власного поля, valueOf у try/catch
-        System.out.println("--- 2. Enum у роботі (values(), власні поля, обробка помилок valueOf) ---");
-        System.out.println("Перелік усіх категорій послуг через ServiceCategory.values():");
-        for (ServiceCategory cat : ServiceCategory.values()) {
-            System.out.printf("  Категорія: %-10s | Ціновий коефіцієнт (priceFactor): %.1fx%n",
-                    cat.name(), cat.getPriceFactor());
+        List<BeautyService> loadedServices = loader.loadFromFile(csvPath);
+
+        System.out.println("\nУспішно завантажені послуги (некоректні рядки пропущено без падіння програми):");
+        for (int i = 0; i < loadedServices.size(); i++) {
+            BeautyService s = loadedServices.get(i);
+            System.out.printf("  [%d] %-8s | %-22s | %-10s | %3d хв | %s%n",
+                    i + 1, s.getServiceCode(), s.getName(), s.getCategory(),
+                    s.getDurationMinutes(), BeautyUtils.formatMoney(s.getPrice()));
+        }
+        System.out.println();
+
+        // 2. Спроба прочитати відсутній файл (програма не зупиняється)
+        System.out.println("--- 2. Спроба відкрити неіснуючий файл (програма не падає) ---");
+        Path nonExistentPath = Path.of("data", "missing_file_example.csv");
+        System.out.println("Звернення до неіснуючого шляху: " + nonExistentPath);
+        List<BeautyService> emptyList = loader.loadFromFile(nonExistentPath);
+        System.out.println("Результат читання відсутнього файлу: повернуто порожній список розміром "
+                + emptyList.size() + "\n");
+
+        // 3. Некоректне значення в сеттері змінюваного класу та його обробка
+        System.out.println("--- 3. Спроба встановити некоректне значення через сеттер ---");
+        if (!loadedServices.isEmpty()) {
+            BeautyService serviceToUpdate = loadedServices.get(0);
+            System.out.println("Обрана послуга: " + serviceToUpdate.getName()
+                    + ", поточна ціна: " + BeautyUtils.formatMoney(serviceToUpdate.getPrice()));
+            try {
+                System.out.print("Спроба встановити ціну -99.99 грн: ");
+                serviceToUpdate.setPrice(-99.99);
+            } catch (IllegalArgumentException e) {
+                System.out.println("Спіймано виключення: " + e.getMessage());
+                log.warn("Rejected invalid price update for service {}: {}",
+                        serviceToUpdate.getServiceCode(), e.getMessage());
+            }
+            System.out.println("Ціна послуги після невдалої спроби залишилась: "
+                    + BeautyUtils.formatMoney(serviceToUpdate.getPrice()) + "\n");
         }
 
-        System.out.println("\nПрямий доступ до поля константи:");
-        System.out.println("  ServiceCategory.MASSAGE.getPriceFactor() = " + ServiceCategory.MASSAGE.getPriceFactor());
+        // 4. Демонстрація логування трьох рівнів (INFO, WARN, ERROR)
+        System.out.println("--- 4. Демонстрація логування всіх трьох рівнів через SLF4J/Logback ---");
+        log.info("Демонстрація рівня INFO: операція виконана штатно (завантажено {} послуг)", loadedServices.size());
+        log.warn("Демонстрація рівня WARN: попередження про пропущені некоректні рядки у вхідному файлі");
+        log.error("Демонстрація рівня ERROR: зафіксовано помилку при спробі відкриття неіснуючого ресурсу");
 
-        System.out.println("\nСпроба викликати ServiceCategory.valueOf із некоректним рядком:");
-        try {
-            ServiceCategory invalid = ServiceCategory.valueOf("SOLARIUM");
-            System.out.println("Знайдено: " + invalid);
-        } catch (IllegalArgumentException e) {
-            System.out.println("  Спіймано виняток для 'SOLARIUM': " + e.getMessage() + "\n");
-        }
-
-        // 3. Обидва switch-вирази
-        System.out.println("--- 3. Демонстрація двох switch-виразів (Java 14+) ---");
-        System.out.println("Switch-вираз #1 (вичерпний по enum ServiceCategory без default):");
-        for (ServiceCategory cat : ServiceCategory.values()) {
-            System.out.println("  " + cat + " -> " + BeautyUtils.getCategoryDescription(cat));
-        }
-
-        BeautyService service = new BeautyService("SRV-H01", "Модельна стрижка", ServiceCategory.HAIRCUT, 60, 650.0);
-        ClientAppointment appointment = new ClientAppointment(
-                client, master, service, LocalDate.now().plusDays(1), LocalTime.of(11, 0), AppointmentState.CONFIRMED
-        );
-
-        System.out.println("\nSwitch-вираз #2 (вибір дії за статусом запису):");
-        for (AppointmentState state : AppointmentState.values()) {
-            System.out.println("  Статус " + state + " -> " + BeautyUtils.getNextAction(state));
-        }
-        System.out.println("Поточна дія для запису клієнта: " + BeautyUtils.getNextAction(appointment.getState()) + "\n");
-
-        // 4. Record з невалідними даними -> IllegalArgumentException із компактного конструктора
-        System.out.println("--- 4. Валідація даних у компактному конструкторі record ---");
-        try {
-            System.out.print("Спроба створити BeautyClient з віком менше 14 років: ");
-            new BeautyClient("+380990001122", "Малюк", LocalDate.now().minusYears(10));
-        } catch (IllegalArgumentException e) {
-            System.out.println("Спіймано виняток: " + e.getMessage());
-        }
-
-        try {
-            System.out.print("Спроба створити Master із порожнім employeeId: ");
-            new Master("   ", "Олексій", ServiceCategory.MANICURE);
-        } catch (IllegalArgumentException e) {
-            System.out.println("Спіймано виняток: " + e.getMessage() + "\n");
-        }
-
-        // 5. Два однакові record-обʼєкти: equals і hashCode без жодного рядка нашого коду
-        System.out.println("--- 5. Автоматичні equals та hashCode для record (без штучного fixedTime) ---");
-        BeautyClient clientA = new BeautyClient("+380509998877", "Олена", LocalDate.of(1998, 3, 10));
-        BeautyClient clientB = new BeautyClient("+380509998877", "Олена", LocalDate.of(1998, 3, 10));
-        BeautyClient clientC = new BeautyClient("+380500000000", "Олена", LocalDate.of(1998, 3, 10));
-
-        System.out.println("Порівняння clientA та clientB (створені звичайним конструктором new BeautyClient(...)):");
-        System.out.println("  clientA == clientB                       : " + (clientA == clientB) + " (різні екземпляри в пам'яті)");
-        System.out.println("  clientA.equals(clientB)                  : " + clientA.equals(clientB) + " (автоматично згенерований equals повертає true!)");
-        System.out.println("  clientA.hashCode() == clientB.hashCode() : "
-                + (clientA.hashCode() == clientB.hashCode()) + " (автоматично згенерований hashCode однаковий)");
-        System.out.println("Порівняння з іншим clientC:");
-        System.out.println("  clientA.equals(clientC)                  : " + clientA.equals(clientC) + "\n");
-
-        // 6. Вивід record через згенерований toString()
-        System.out.println("--- 6. Автоматичний toString() для record ---");
-        System.out.println("client: " + client);
-        System.out.println("master: " + master);
-        System.out.println("\nСутності, що залишилися звичайними класами (через наявність мутабельних полів ✎):");
-        System.out.println("service (мутабельне price): " + service);
-        System.out.println("appointment (мутабельне state): " + appointment);
-
-        System.out.println("\nДемонстрацію Лабораторної роботи №2 успішно завершено!");
+        System.out.println("\nДемонстрацію Лабораторної роботи №3 успішно завершено!");
     }
 }
