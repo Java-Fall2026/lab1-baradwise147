@@ -32,6 +32,22 @@ public final class BeautyUtils {
         ValidationHelper.requireNotNull(value, fieldName);
     }
 
+    public static void requireNotBlank(String value, String fieldName) {
+        ValidationHelper.requireNotBlank(value, fieldName);
+    }
+
+    public static void requirePositive(double value, String fieldName) {
+        ValidationHelper.requirePositive(value, fieldName);
+    }
+
+    public static void requirePositive(int value, String fieldName) {
+        ValidationHelper.requirePositive(value, fieldName);
+    }
+
+    public static void requireInRange(int value, int min, int max, String fieldName) {
+        ValidationHelper.requireInRange(value, min, max, fieldName);
+    }
+
     public static void validatePhone(String phone) {
         ValidationHelper.requireNotBlank(phone, "Client phone");
     }

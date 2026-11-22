@@ -29,8 +29,14 @@ final class ValidationHelper {
     }
 
     static void requirePositive(double value, String fieldName) {
-        if (value <= 0.0) {
-            throw new IllegalArgumentException(fieldName + " must be strictly greater than 0, got: " + value);
+        if (Double.isNaN(value) || Double.isInfinite(value) || value <= 0.0) {
+            throw new IllegalArgumentException(fieldName + " must be greater than 0, got: " + value);
+        }
+    }
+
+    static void requirePositive(int value, String fieldName) {
+        if (value <= 0) {
+            throw new IllegalArgumentException(fieldName + " must be greater than 0, got: " + value);
         }
     }
 

@@ -70,7 +70,7 @@ public final class BeautyService {
      * @param price new price, strictly greater than 0
      */
     public final void setPrice(double price) {
-        BeautyUtils.validatePrice(price);
+        BeautyUtils.requirePositive(price, "Service price");
         this.price = price;
     }
 
