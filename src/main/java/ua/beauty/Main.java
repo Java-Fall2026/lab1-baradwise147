@@ -10,7 +10,6 @@ import ua.beauty.util.BeautyUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 /**
@@ -33,14 +32,12 @@ public class Main {
         System.out.println("  client.phone()     = " + client.phone());
         System.out.println("  client.name()      = " + client.name());
         System.out.println("  client.birthDate() = " + client.birthDate());
-        System.out.println("  client.createdAt() = " + client.createdAt());
 
         Master master = new Master("EMP-001", "Ірина Шевченко", ServiceCategory.HAIRCUT);
         System.out.println("\nСтворено record Master:");
         System.out.println("  master.employeeId() = " + master.employeeId());
         System.out.println("  master.fullName()   = " + master.fullName());
-        System.out.println("  master.category()   = " + master.category());
-        System.out.println("  master.createdAt()  = " + master.createdAt() + "\n");
+        System.out.println("  master.category()   = " + master.category() + "\n");
 
         // 2. Enum у роботі: перебір values(), доступ до власного поля, valueOf у try/catch
         System.out.println("--- 2. Enum у роботі (values(), власні поля, обробка помилок valueOf) ---");
@@ -96,19 +93,18 @@ public class Main {
         }
 
         // 5. Два однакові record-обʼєкти: equals і hashCode без жодного рядка нашого коду
-        System.out.println("--- 5. Автоматичні equals та hashCode для record ---");
-        LocalDateTime fixedTime = LocalDateTime.of(2026, 11, 15, 12, 0);
-        BeautyClient clientA = new BeautyClient("+380509998877", "Олена", LocalDate.of(1998, 3, 10), fixedTime);
-        BeautyClient clientB = new BeautyClient("+380509998877", "Олена", LocalDate.of(1998, 3, 10), fixedTime);
-        BeautyClient clientC = new BeautyClient("+380500000000", "Олена", LocalDate.of(1998, 3, 10), fixedTime);
+        System.out.println("--- 5. Автоматичні equals та hashCode для record (без штучного fixedTime) ---");
+        BeautyClient clientA = new BeautyClient("+380509998877", "Олена", LocalDate.of(1998, 3, 10));
+        BeautyClient clientB = new BeautyClient("+380509998877", "Олена", LocalDate.of(1998, 3, 10));
+        BeautyClient clientC = new BeautyClient("+380500000000", "Олена", LocalDate.of(1998, 3, 10));
 
-        System.out.println("Порівняння clientA та clientB з ідентичними полями:");
-        System.out.println("  clientA == clientB               : " + (clientA == clientB) + " (різні екземпляри в пам'яті)");
-        System.out.println("  clientA.equals(clientB)          : " + clientA.equals(clientB) + " (автоматично згенерований equals)");
+        System.out.println("Порівняння clientA та clientB (створені звичайним конструктором new BeautyClient(...)):");
+        System.out.println("  clientA == clientB                       : " + (clientA == clientB) + " (різні екземпляри в пам'яті)");
+        System.out.println("  clientA.equals(clientB)                  : " + clientA.equals(clientB) + " (автоматично згенерований equals повертає true!)");
         System.out.println("  clientA.hashCode() == clientB.hashCode() : "
-                + (clientA.hashCode() == clientB.hashCode()) + " (автоматично згенерований hashCode)");
+                + (clientA.hashCode() == clientB.hashCode()) + " (автоматично згенерований hashCode однаковий)");
         System.out.println("Порівняння з іншим clientC:");
-        System.out.println("  clientA.equals(clientC)          : " + clientA.equals(clientC) + "\n");
+        System.out.println("  clientA.equals(clientC)                  : " + clientA.equals(clientC) + "\n");
 
         // 6. Вивід record через згенерований toString()
         System.out.println("--- 6. Автоматичний toString() для record ---");
@@ -118,5 +114,6 @@ public class Main {
         System.out.println("service (мутабельне price): " + service);
         System.out.println("appointment (мутабельне state): " + appointment);
 
+        System.out.println("\nДемонстрацію Лабораторної роботи №2 успішно завершено!");
     }
 }
