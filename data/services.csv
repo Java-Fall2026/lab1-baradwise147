@@ -8,3 +8,4 @@ SRV-F01,Facial Cleansing,FACIAL,60,950.0
 SRV-B03,Charity Haircut,HAIRCUT,30,-150.0
 SRV-B04,Incomplete Service Entry,HAIRCUT
 SRV-M02,French Manicure,MANICURE,75,650.0
+SRV-H01,Duplicate Haircut,HAIRCUT,30,350.0
