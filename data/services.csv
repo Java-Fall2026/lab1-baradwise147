@@ -1,0 +1,10 @@
+serviceCode,name,category,durationMinutes,price
+SRV-H01,Classic Haircut,HAIRCUT,45,450.0
+SRV-M01,Gel Manicure,MANICURE,60,550.0
+SRV-B01,Body Peeling,SPA_WELLNESS,60,800.0
+SRV-S01,Aroma Massage,MASSAGE,90,1200.0
+SRV-B02,Express Polish,MANICURE,5,200.0
+SRV-F01,Facial Cleansing,FACIAL,60,950.0
+SRV-B03,Charity Haircut,HAIRCUT,30,-150.0
+SRV-B04,Incomplete Service Entry,HAIRCUT
+SRV-M02,French Manicure,MANICURE,75,650.0
